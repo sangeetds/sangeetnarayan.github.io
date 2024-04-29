@@ -1,0 +1,127 @@
+---
+layout: post
+title: RESTful APIs with Kotlin and Ktor
+date: 2021-07-12 13:32:20 +0530
+subtitle: Learn how to use the new Ktor framework to create REST APIs.
+background: '/img/posts/kotlin-post.jpg'
+tags: [Kotlin, Ktor, REST APIs]
+comments: true
+---
+
+<p>Application Programming Interface or API can be simply defined as an intermediary which allows two applications to talk to each other.  You likely encounter thousands of such APIs in your daily internet journey. When you visit any webpage such as <a href="www.youtube.com">youtube</a>, your browser makes API calls to YouTube. Similarly, there are various API calls when you search for a video on YouTube or when you make a search for something on Instagram.</p>
+
+<p>REpresentational State Transfer or REST is an architectural design concept for accessing the resource in your application. It's always advised to follow its guidelines to run into problems down the road.
+
+
+<h2> What are we building</h2>
+<p>In this tutorial, we will build a simple backend Application for a pet store. We will expose various endpoints that will let people get information about the pets in the store, add a new member to the store or remove them from the store.
+
+<p>If you get stuck at any point you can have a look at the final state of the application <a href="https://github.com/sangeetds/petstore">here</a>.
+
+<h2> Why Kotlin and Ktor?</h2>
+<p>Whenever I set out for building out a new program/application, I look for two things:-
+
+<ul>
+    <li>How hard is the learning curve</li>
+    <li>Can it be built with Kotlin?</li>
+</ul> 
+
+<p>Kotlin brings all the power of a statically typed language and provides the sweetest syntax to write the most robust application. It is designed to be completely interoperable with Java and shares its tooling with Java. It brings many advantages over Java, such as type-safety, higher-order functions, coroutines and much more. Listing all benefits will make an article in itself.
+
+<p>Ktor is the latest creation from JetBrains, the brains behind Kotlin. It's an asynchronous web framework that allows developers to create highly flexible, module and scalable microservices. Even though it imposes some conventions, it rests most of the power in the developer's hands. There are numerous frameworks for Kotlin, but most of them were actually built for Java. None of their Kotlin version feels very Kotlin-y or leverages the full power of Kotlin as much as Ktor does. Being backed by JetBrains, you can expect excellent support and documentation.
+
+<h2> Setting up the project</h2>
+<p>Let's begin with setting up the project. I'm using Intellij IDEA IDE though you can use any IDE of your choice. One advantage of using Intellij is that it provides many plugins to quickly set up a project. You can even choose to use <a href="https://ktor.io/quickstart/generator.html#">ktor-start</a>, Maven or Gradle to set up your project.
+
+<h2> Building the server</h2>
+<p>To run a Ktor application, you need to create a server first. There's two way to do it:
+
+<ul>
+    <li>EmbeddedServer: This is the simplest way to create your server where you can pass different parameters such as the server type, port, etc., in code and run the application.</li>
+    <li>EngineMain: This provides more flexibility as you can define the parameters in <code>application.conf</code> file in resources, and the server will load the changes without any recompilation.</li>
+    <li>Let's begin with an embeddedServer to create a simple server. Give a look at the <code>Application.kt</code> file in the src directory. It might contain the code for engineMain if you created the project with the Intellij plugin. You may replace the existing code with this:
+        <script src="https://gist.github.com/sangeetds/60e4bfdf66e7d5e0e32d456eca0f74d3.js"></script><br>
+    </li>
+</ul>
+  
+
+<h2> Dissecting the starter code</h2>
+<br>
+<ol>
+    <li>1. This is the main module of the app. As you can see, I've not passed <code>args</code> as an argument to the main function. Kotlin provides flexibility over choosing to pass args as per your requirement.</li>
+    <li>2. This declares the server using <code>Netty</code> which will run on port 8080.</li>
+    <li>3. Routing is a feature which enables us to handle with all the incoming requests. Inside this, we can define routes.</li>
+    <li>4. We have defined a route, which will respond to all <code>GET</code> requests made to.<code>/</code></li>
+    <li>5. This will treat the HTTP call and respond with a text. This tutorial wouldn't do justice if we didn't check our server first by replying <code>Hello World!</code></code></li>
+    <li>6. This would start up the server.</li>
+</ol>
+
+<p>Run the application and see whether everything's working fine or not. Open your browser and go to the address <code>localhost:8080</code> (given you passed 8080 as the port value). You might see <code>Hello World!</code> on your browser screen. The browser serves as an effective way to make GET requests but has no mean to make any other type of requests. Therefore, we will be using <code>cURL</code> for making further requests. You can even use Intellij IDEA's in-built HTTP client or Postman to make requests. The curl command for making a get request to our current endpoint will be: <code>curl localhost:8080</code>
+
+<p>There are a few changes that we can do our server. Let's replace the routing endpoints with routing functions that would match the requests. We will replace our original route with a <code>get</code> function that now only needs to take the URL and the code to handle the request.
+
+<script src="https://gist.github.com/sangeetds/98264c5624979c580e325ecf5f5c2afd.js"></script><br>
+
+<h2> Creating our store</h2>
+
+<p>Let's have some pets for our store. For that, we will create a data class in <code>Pet.kt</code>. Creating a simple Pet class becomes as simple as:
+
+<script src="https://gist.github.com/sangeetds/14d45d510d93a1ae718add24e3f5dff5.js"></script>
+
+<p>We have introduced an <code>id</code> UUID attribute which gets us unique object identifiers. We can now add pets to our store by initialising a list of pets in our <code>Application.kt</code> file.
+
+<script src="https://gist.github.com/sangeetds/8d1c4308641ecaa01cc3b066fe061836.js"></script><br>
+
+<h2> Updating our endpoints</h2>
+
+<p>Now for any GET requests, we can try returning the pets that we have in our store. Update your <code>get</code> function to return the list instead of the text.
+
+<script src="https://gist.github.com/sangeetds/11bedc62984605ed090f22f731051fd0.js"></script>
+
+<p>Rerun our server and check the results in a browser. Open any browser and go to <code>localhost:8080</code>. What do you see? No need to refresh your browser; you wouldn't see anything there.
+
+<p>Why do we see nothing on our screen? If you go back to your IDE/console you will see that ktor has thrown an exception starting like this:
+
+<pre><code>
+java.lang.IllegalArgumentException: Response pipeline couldn't transform 'class java.util.ArrayList' to the OutgoingContent
+</code></pre>
+
+<p>Ktor is just trying to say that it has no way to send our <code>petList</code> in a format that the browser can read. Client and server mainly interact with texts or JSON, and we need to tell Ktor how to convert our <code>petList</code> or any object into such format. First, we need to install a feature, namely <code>ContentNegotiation</code>, to negotiate the types between the client and the server and serialize/deserialize the contents. For serialization/deserialization, we can use either the <code>kotlinx. serialization</code> library or maybe Gson, Jackson, etc. We will go with the in-built one.</p>
+
+<script src="https://gist.github.com/sangeetds/2341d890661deffd4f3135d0f8564fb7.js"></script>
+
+<p>We will install ContentNegotiation inside our server and call the <code>json()</code> method. You might face some imports or unresolved reference error, in that case update your <b>pom.xml</b> or <code>build.gradle</code> file to include the <code>ktor-serialization</code> dependency. For our second step, we will also add the serialization plugin. Finally, we will add the <code>@Serializable</code> annotation to our <code>Pet</code> data class to generate the serializer function.</p>
+
+<script src="https://gist.github.com/sangeetds/e95f0844f19b2ff0fb054155400371ac.js"></script>
+
+<p>If you open your browser and go to <code>localhost:8080</code>,</p>
+you will see an array of Pet JSONs. We can now even add more routings. We can have another GET route to get pets by their id. We can pass pet-id in our url (we put id in curly braces in our path to denote that it's a variable) and get information about a particular pet. We can add a <code>post</code> function that will help us add another pet to our pet store and even a <code>delete</code>  function to allow people to adopt a pet. <br><br>
+
+<script src="https://gist.github.com/sangeetds/64624bf4689319399d6a78d8eb75e45c.js"></script>
+
+<p>You can try out these APIs you just made by using any HTTP Client or as mentioned, the <code>cURL</code> command. curl for a POST request can be:</p>
+
+{% highlight zsh %}
+curl --header "Content-Type: application/json" --request POST \
+--data '{ "name": "Felix", "type": "Cat", "price": 100.0 }' \
+ http://0.0.0.0:8000  
+{% endhighlight %}      
+
+<p>Similarly, for a DELETE request :       </p>
+
+{% highlight sh %}
+curl -X DELETE http://0.0.0.0:8000/52de6637-a9d7-4dbb-aa5f-3add9122dea2
+{% endhighlight %}
+
+Our application here contains four routes, but the number can grow over time. This routing tree may become challenging to manage. We can club the routes according to their functionalities in different modules. According to their features, these modules can be shifted to separate files and can be even managed in other packages.<br><br>
+
+<script src="https://gist.github.com/sangeetds/4724cfc70e85b2368afd460ebb414001.js"></script><br>
+
+
+<h2> What's next?</h2>
+
+<p>We can add persistence to our application. We were hardcoding objects for our application which would get lost as soon as our server stops. We can prevent this by using any database of our choices such as MySQL, PostgreSQL, etc. or even NoSQL options such as MongoDB. We can build a UI such as a web app (Kotlin now also targets JS and can help create seamless web apps) or an Android app to help display our data better.</p>
+
+<h2>  Wrapping Up</h2>
+
+<p>That's it! We have built our pet store very quickly. There a lot of other features that Ktor offers that we could discuss in another article. Do let me know your thoughts in the comments down below!</p>
